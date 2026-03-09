@@ -112,8 +112,12 @@ let filteredData = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 App initialized');
     setupNavigation();
     loadData();
+    
+    // Reload data every 30 seconds for testing
+    // setInterval(loadData, 30000);
 });
 
 // Navigation
@@ -198,14 +202,23 @@ function parseCSV(csv) {
 
 // Load Data from Google Sheets (via CSV export)
 async function loadData() {
+    console.log('🔄 Loading data from:', CONFIG.CSV_URL);
     try {
         // Add cache-busting parameter
         const cacheBuster = Date.now();
         const response = await fetch(CONFIG.CSV_URL + '?_=' + cacheBuster, {
             cache: 'no-store'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const csvText = await response.text();
+        console.log('📥 Received CSV data:', csvText.substring(0, 200) + '...');
+        
         const data = parseCSV(csvText);
+        console.log('📊 Parsed rows:', data.length);
         
         if (data && data.length > 1) {
             // Skip header row
@@ -232,16 +245,22 @@ async function loadData() {
             
             filteredData = [...inventoryData];
             
+            console.log('✅ Loaded', inventoryData.length, 'items');
+            
             updateDashboard();
             updateInventoryTable();
             updateCategoriesView();
             
             document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
-            showToast('Data synced successfully!', 'success');
+            showToast('Data synced successfully! ' + inventoryData.length + ' items loaded.', 'success');
+        } else {
+            console.warn('⚠️ No data or only headers received');
+            showToast('No data found in spreadsheet', 'warning');
         }
     } catch (error) {
-        console.error('Error loading data:', error);
-        showToast('Failed to load data. Check console.', 'error');
+        console.error('❌ Error loading data:', error);
+        console.error('Stack:', error.stack);
+        showToast('Failed to load data: ' + error.message, 'error');
     }
 }
 
