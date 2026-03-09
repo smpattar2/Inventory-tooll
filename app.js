@@ -1919,8 +1919,8 @@ switchView = function(viewName) {
 };
 
 // Load DC data on init
-document.addEventListener('DOMContentLoaded', () => {
-    await loadDCData(); await new Promise(r => setTimeout(r, 1000));
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDCData();
 });
 
 // ==================== PURCHASE REQUESTS ====================
