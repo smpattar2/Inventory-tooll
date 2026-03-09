@@ -7,7 +7,7 @@ exports.handler = async (event, context) => {
     const response = await fetch(APPS_SCRIPT_URL + '?action=getInventory&_=' + Date.now());
     const data = await response.json();
     
-    // Convert JSON to CSV for frontend compatibility
+    // Apps Script returns array of arrays, not objects
     if (!data || data.length === 0) {
       return {
         statusCode: 200,
@@ -20,21 +20,21 @@ exports.handler = async (event, context) => {
       };
     }
     
-    // Get headers from first object
-    const headers = Object.keys(data[0]);
+    // First row is headers, rest are data rows
+    const headers = data[0];
     const csvRows = [headers.join(',')];
     
-    // Convert each row to CSV
-    data.forEach(row => {
-      const values = headers.map(header => {
-        const val = row[header];
-        if (val === null || val === undefined) return '';
+    // Convert each data row to CSV
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const values = row.map(val => {
+        if (val === null || val === undefined || val === '') return '';
         // Escape quotes and wrap in quotes if contains comma
         const str = String(val).replace(/"/g, '""');
         return str.includes(',') ? `"${str}"` : str;
       });
       csvRows.push(values.join(','));
-    });
+    }
     
     return {
       statusCode: 200,
